@@ -66,6 +66,16 @@
     .card:hover .open svg { transform: translateX(3px); }
 
     footer { margin-top: 56px; color: var(--muted); font-size: 13px; }
+
+    .themebar { display: flex; align-items: center; gap: 14px; margin-bottom: 36px; flex-wrap: wrap; }
+    .themebar .label { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .3px; }
+    .switch { display: inline-flex; background: var(--cream); border-radius: 999px; padding: 4px; border: 1px solid rgba(18,96,58,0.12); }
+    .switch button {
+      appearance: none; border: 0; background: transparent; cursor: pointer;
+      font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+      padding: 8px 20px; border-radius: 999px; transition: background .18s ease, color .18s ease;
+    }
+    .switch button.active { background: var(--green); color: var(--cream); }
   </style>
 </head>
 <body>
@@ -84,6 +94,14 @@
     </header>
     <p class="sub">Galerie des prototypes interactifs. Cliquez sur une maquette pour l'explorer en plein écran.</p>
 
+    <div class="themebar">
+      <span class="label">Thème</span>
+      <div class="switch" id="switch">
+        <button data-theme="classique" class="active">Classique</button>
+        <button data-theme="moderne">Moderne</button>
+      </div>
+    </div>
+
     <div class="grid" id="grid"></div>
 
     <footer>Green Eat V1 · Prototypes · <span id="count"></span> maquettes</footer>
@@ -91,28 +109,47 @@
 
   <script>
     const maquettes = [
-      { file: "maquettes/auth-onboarding.html",        title: "Auth & Onboarding",          desc: "Inscription, connexion et premiers pas dans l'application." },
-      { file: "maquettes/parcours-consommateur.html",  title: "Parcours consommateur",      desc: "L'expérience côté client : découverte, commande et suivi." },
-      { file: "maquettes/parcours-producteur.html",    title: "Parcours producteur",        desc: "Gestion des produits, stocks et ventes côté producteur." },
-      { file: "maquettes/premium-fidelite-conso.html", title: "Premium & Fidélité (conso)", desc: "Avantages premium et programme de fidélité pour le consommateur." },
-      { file: "maquettes/premium-fidelite-prod.html",  title: "Premium & Fidélité (prod)",  desc: "Offres premium et fidélisation côté producteur." },
-      { file: "maquettes/back-office-manager.html",    title: "Back-office manager",        desc: "Tableau de bord et outils d'administration." },
+      { file: "auth-onboarding.html",        title: "Auth & Onboarding",          desc: "Inscription, connexion et premiers pas dans l'application." },
+      { file: "parcours-consommateur.html",  title: "Parcours consommateur",      desc: "L'expérience côté client : découverte, commande et suivi." },
+      { file: "parcours-producteur.html",    title: "Parcours producteur",        desc: "Gestion des produits, stocks et ventes côté producteur." },
+      { file: "premium-fidelite-conso.html", title: "Premium & Fidélité (conso)", desc: "Avantages premium et programme de fidélité pour le consommateur." },
+      { file: "premium-fidelite-prod.html",  title: "Premium & Fidélité (prod)",  desc: "Offres premium et fidélisation côté producteur." },
+      { file: "back-office-manager.html",    title: "Back-office manager",        desc: "Tableau de bord et outils d'administration." },
     ];
 
     const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     const grid = document.getElementById("grid");
-    maquettes.forEach((m, i) => {
+    const cards = maquettes.map((m, i) => {
       const a = document.createElement("a");
-      a.href = m.file;
       a.className = "card";
+      a.dataset.file = m.file;
       a.innerHTML =
         '<span class="num">' + String(i + 1).padStart(2, "0") + '</span>' +
         '<h2>' + m.title + '</h2>' +
         '<p>' + m.desc + '</p>' +
         '<span class="open">Ouvrir la maquette ' + arrow + '</span>';
       grid.appendChild(a);
+      return a;
     });
     document.getElementById("count").textContent = maquettes.length;
+
+    const themes = ["classique", "moderne"];
+    let theme = localStorage.getItem("ge-theme");
+    if (!themes.includes(theme)) theme = "classique";
+
+    function applyTheme(t) {
+      theme = t;
+      localStorage.setItem("ge-theme", t);
+      cards.forEach(c => { c.href = "maquettes/" + t + "/" + c.dataset.file; });
+      document.querySelectorAll("#switch button").forEach(b => {
+        b.classList.toggle("active", b.dataset.theme === t);
+      });
+    }
+
+    document.querySelectorAll("#switch button").forEach(b => {
+      b.addEventListener("click", () => applyTheme(b.dataset.theme));
+    });
+    applyTheme(theme);
   </script>
 </body>
 </html>

@@ -140,7 +140,7 @@
     function applyTheme(t) {
       theme = t;
       localStorage.setItem("ge-theme", t);
-      cards.forEach(c => { c.href = "maquettes/" + t + "/" + c.dataset.file; });
+      cards.forEach(c => { c.href = "view.html?p=" + encodeURIComponent(c.dataset.file) + "&theme=" + t; });
       document.querySelectorAll("#switch button").forEach(b => {
         b.classList.toggle("active", b.dataset.theme === t);
       });

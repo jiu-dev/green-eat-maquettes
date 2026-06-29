@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Green Eat — Maquette</title>
+  <style>
+    :root {
+      --green: #18603a;
+      --green-dark: #124d2e;
+      --cream: #eef0e6;
+      --muted: #5d6450;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #d9cfb5; overflow: hidden; }
+
+    #frame { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #d9cfb5; }
+
+    /* Barre flottante */
+    .bar {
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: saturate(180%) blur(16px);
+      -webkit-backdrop-filter: saturate(180%) blur(16px);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 999px; padding: 7px;
+      box-shadow: 0 8px 30px rgba(31,36,25,0.22);
+      z-index: 100; user-select: none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .bar.hidden { opacity: 0; transform: translateX(-50%) translateY(20px); pointer-events: none; }
+
+    .iconbtn {
+      appearance: none; border: 0; background: transparent; cursor: pointer;
+      width: 38px; height: 38px; border-radius: 999px; color: var(--green);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: background .15s ease;
+    }
+    .iconbtn:hover { background: rgba(18,96,58,0.10); }
+    .iconbtn:disabled { opacity: .3; cursor: default; background: transparent; }
+    .iconbtn svg { width: 19px; height: 19px; }
+
+    .title {
+      font-size: 14px; font-weight: 650; color: #1f2419; white-space: nowrap;
+      padding: 0 6px; max-width: 38vw; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sep { width: 1px; height: 24px; background: rgba(0,0,0,0.10); margin: 0 2px; }
+
+    .switch { display: inline-flex; background: rgba(18,96,58,0.08); border-radius: 999px; padding: 3px; }
+    .switch button {
+      appearance: none; border: 0; background: transparent; cursor: pointer; font: inherit;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      padding: 7px 15px; border-radius: 999px; transition: background .18s ease, color .18s ease; white-space: nowrap;
+    }
+    .switch button.active { background: var(--green); color: var(--cream); }
+
+    /* Languette pour ré-afficher la barre quand masquée */
+    .reveal {
+      position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+      width: 110px; height: 22px; z-index: 99; cursor: pointer;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .reveal::after {
+      content: ""; width: 40px; height: 4px; margin-bottom: 6px; border-radius: 999px;
+      background: rgba(31,36,25,0.28);
+    }
+
+    @media (max-width: 520px) {
+      .title { display: none; }
+      .sep:first-of-type { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <iframe id="frame" title="Maquette Green Eat"></iframe>
+
+  <div class="reveal" id="reveal" title="Afficher la barre"></div>
+
+  <div class="bar" id="bar">
+    <a class="iconbtn" id="home" href="index.html" title="Retour à la galerie">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
+    </a>
+    <div class="sep"></div>
+    <button class="iconbtn" id="prev" title="Maquette précédente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="title" id="title">Maquette</span>
+    <button class="iconbtn" id="next" title="Maquette suivante">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <div class="sep"></div>
+    <div class="switch" id="switch">
+      <button data-theme="classique">Classique</button>
+      <button data-theme="moderne">Moderne</button>
+    </div>
+    <div class="sep"></div>
+    <button class="iconbtn" id="hide" title="Masquer la barre">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+  </div>
+
+  <script>
+    const maquettes = [
+      { file: "auth-onboarding.html",        title: "Auth & Onboarding" },
+      { file: "parcours-consommateur.html",  title: "Parcours consommateur" },
+      { file: "parcours-producteur.html",    title: "Parcours producteur" },
+      { file: "premium-fidelite-conso.html", title: "Premium & Fidélité (conso)" },
+      { file: "premium-fidelite-prod.html",  title: "Premium & Fidélité (prod)" },
+      { file: "back-office-manager.html",    title: "Back-office manager" },
+    ];
+    const themes = ["classique", "moderne"];
+
+    const params = new URLSearchParams(location.search);
+    let idx = Math.max(0, maquettes.findIndex(m => m.file === params.get("p")));
+    if (idx < 0) idx = 0;
+    let theme = params.get("theme");
+    if (!themes.includes(theme)) {
+      theme = localStorage.getItem("ge-theme");
+      if (!themes.includes(theme)) theme = "classique";
+    }
+
+    const frame  = document.getElementById("frame");
+    const titleEl = document.getElementById("title");
+    const prevBtn = document.getElementById("prev");
+    const nextBtn = document.getElementById("next");
+    const homeBtn = document.getElementById("home");
+
+    function render() {
+      const m = maquettes[idx];
+      const wanted = "maquettes/" + theme + "/" + m.file;
+      // évite de recharger l'iframe si l'URL ne change pas (changement de thème uniquement)
+      const abs = new URL(wanted, location.href).href;
+      if (frame.src !== abs) frame.src = wanted;
+      titleEl.textContent = m.title;
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === maquettes.length - 1;
+      document.querySelectorAll("#switch button").forEach(b =>
+        b.classList.toggle("active", b.dataset.theme === theme));
+      homeBtn.href = "index.html";
+      localStorage.setItem("ge-theme", theme);
+      const u = new URLSearchParams({ p: m.file, theme });
+      history.replaceState(null, "", "view.html?" + u.toString());
+      document.title = "Green Eat — " + m.title;
+    }
+
+    document.querySelectorAll("#switch button").forEach(b =>
+      b.addEventListener("click", () => { theme = b.dataset.theme; render(); }));
+    prevBtn.addEventListener("click", () => { if (idx > 0) { idx--; render(); } });
+    nextBtn.addEventListener("click", () => { if (idx < maquettes.length - 1) { idx++; render(); } });
+
+    // raccourcis clavier
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft"  && idx > 0) { idx--; render(); }
+      if (e.key === "ArrowRight" && idx < maquettes.length - 1) { idx++; render(); }
+      if (e.key.toLowerCase() === "t") { theme = theme === "classique" ? "moderne" : "classique"; render(); }
+    });
+
+    // masquer / ré-afficher la barre
+    const bar = document.getElementById("bar");
+    document.getElementById("hide").addEventListener("click", () => bar.classList.add("hidden"));
+    document.getElementById("reveal").addEventListener("click", () => bar.classList.remove("hidden"));
+
+    render();
+  </script>
+</body>
+</html>
